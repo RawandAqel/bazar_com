@@ -28,9 +28,10 @@ def purchase_book(item_number):
         return jsonify({"error": "Book out of stock"}), 400
     
     # Update the catalog to decrement quantity
-    update_response = requests.post(f'{CATALOG_SERVER}/update', json={
+    update_response = requests.post(f'{CATALOG_SERVER}/update',json={
         "id": item_number,
         "quantity": -1
+        
     })
     
     if update_response.status_code != 200:

@@ -14,7 +14,12 @@ def search(topic):
         return jsonify(response.json())
     return jsonify({"error": "Failed To search"}), 500
 
-
+  @app.route('/info/<int:item_number>', methods=['GET'])
+def info(item_number):
+    response = requests.get(f'{CATALOG_SERVER}/info/{item_number}')
+    if response.status_code == 200:
+        return jsonify(response.json())
+    return jsonify({"error": "Book not found"}), 404
 
 @app.route('/purchase/<int:item_number>', methods=['POST'])
 def purchase(item_number):
@@ -23,12 +28,7 @@ def purchase(item_number):
         return jsonify(response.json())
     return jsonify({"error": "Purchase failed"}), 400
     
-    @app.route('/info/<int:item_number>', methods=['GET'])
-def info(item_number):
-    response = requests.get(f'{CATALOG_SERVER}/info/{item_number}')
-    if response.status_code == 200:
-        return jsonify(response.json())
-    return jsonify({"error": "Book not found"}), 404
+  
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

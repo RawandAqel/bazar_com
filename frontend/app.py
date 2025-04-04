@@ -3,17 +3,18 @@ import requests
 import os
 
 app = Flask(__name__)
-
 # Server URLs (will be set based on environment)
 CATALOG_SERVER = os.getenv('CATALOG_SERVER', 'http://localhost:5001')
 ORDER_SERVER = os.getenv('ORDER_SERVER', 'http://localhost:5002')
+
+
 
 @app.route('/search/<topic>', methods=['GET'])
 def search(topic):
     response = requests.get(f'{CATALOG_SERVER}/search/{topic}')
     if response.status_code == 200:
         return jsonify(response.json())
-    return jsonify({"error": "Failed to search"}), 500
+    return jsonify({"error": "Failed To search"}), 500
 
 @app.route('/info/<int:item_number>', methods=['GET'])
 def info(item_number):

@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "5000:5000"
+    environment:
+      - CATALOG_SERVER=http://catalog:5001
+      - ORDER_SERVER=http://order:5002
+    depends_on:
+      - catalog
+      - order
+
+  catalog:
+    build: ./catalog
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./catalog/catalog_data.json:/app/catalog_data.json
+
+  order:
+    build: ./order
+    ports:
+      - "5002:5002"
+    environment:
+      - CATALOG_SERVER=http://catalog:5001
+    volumes:
+      - ./order/order_log.txt:/app/order_log.txt

@@ -28,6 +28,10 @@ def purchase(item_number):
     if response.status_code == 200:
         return jsonify(response.json())
     return jsonify({"error": "Purchase failed"}), 400
+@app.route('/invalidate/<int:item_number>', methods=['POST'])
+def invalidate(item_number):
+    invalidate_cache_for_id(item_number)
+    return jsonify({"status": f"Cache invalidated for book ID {item_number}."})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

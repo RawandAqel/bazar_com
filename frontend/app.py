@@ -28,6 +28,14 @@ def purchase(item_number):
     if response.status_code == 200:
         return jsonify(response.json())
     return jsonify({"error": "Purchase failed"}), 400
+     global last_catalog_server
+    last_catalog_server = (last_catalog_server+1) % len(CATALOG_SERVER)
+    response = requests.get(f'{CATALOG_SERVER[last_catalog_server]}/info/{item_number}')
+    if response.status_code == 200:
+        book = response.json()
+        add_to_cache(cache_key, book, [item_number])
+        return jsonify(book)
+    return jsonify({"error": "Book not found"}), 404
 @app.route('/purchase/<int:item_number>', methods=['POST'])
 def purchase(item_number):
     global last_order_server

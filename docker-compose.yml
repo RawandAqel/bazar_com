@@ -12,12 +12,20 @@ services:
       - catalog
       - order
 
-  catalog:
+ catalog-1:
     build: ./catalog
     ports:
-      - "5001:5001"
+      - "5001:5001"  
     volumes:
       - ./catalog/catalog_data.json:/app/catalog_data.json
+    hostname: catalog-1
+    environment:
+      - CATALOG_REPLICAS=http://catalog-1:5001,http://catalog-2:5001
+      - PORT=5001
+      - HOSTNAME=catalog-1
+    networks:
+      - app-network
+      
 
   order:
     build: ./order

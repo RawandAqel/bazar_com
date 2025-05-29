@@ -10,7 +10,8 @@ services:
       - ORDER_SERVER=http://order:5002
     depends_on:
       - catalog-1
-      - order
+      - order-1
+      - order-2
 
  catalog-1:
     build: ./catalog
@@ -27,7 +28,7 @@ services:
       - app-network
       
 
-  order:
+  order-1:
     build: ./order
     ports:
       - "5002:5002"

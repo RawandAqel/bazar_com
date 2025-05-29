@@ -10,7 +10,7 @@ CATALOG_SERVER = os.getenv('CATALOG_REPLICAS', ['http://localhost:5001']).split(
 last_catalog_server=0
 ORDER_REPLICAS = os.getenv('ORDER_REPLICAS',['http://localhost:5002']).split(',')
 last_order_server=0
-
+# ===== In-Memory Cache Implementation =====
 CACHE = {}
 ID_TO_KEYS = {}
 
@@ -40,6 +40,9 @@ def invalidate_cache_for_id(book_id):
     for key in keys:
         if key in CACHE:
             del CACHE[key]
+
+# ===== ROUTES =====
+
 @app.route('/search/<topic>', methods=['GET'])
 def search(topic):
     cache_key = f"search:{topic}"
@@ -86,5 +89,6 @@ def invalidate(item_number):
     invalidate_cache_for_id(item_number)
     return jsonify({"status": f"Cache invalidated for book ID {item_number}."})
 
+# ===== Main =====
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

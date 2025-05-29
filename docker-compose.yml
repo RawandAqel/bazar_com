@@ -3,17 +3,21 @@ version: '3'
 services:
   frontend:
     build: ./frontend
+    hostname: frontend
     ports:
       - "5000:5000"
     environment:
-      - CATALOG_SERVER=http://catalog:5001
-      - ORDER_SERVER=http://order:5002
+      - CATALOG_REPLICAS=http://catalog-1:5001,http://catalog-2:5001
+      - ORDER_REPLICAS=http://order-1:5002,http://order-2:5002
     depends_on:
       - catalog-1
+      - catalog-2
       - order-1
       - order-2
+    networks:
+      - app-network
 
- catalog-1:
+  catalog-1:
     build: ./catalog
     ports:
       - "5001:5001"  
@@ -26,13 +30,50 @@ services:
       - HOSTNAME=catalog-1
     networks:
       - app-network
-      
+
+  catalog-2:
+    build: ./catalog
+    ports:
+      - "5003:5001"  
+    volumes:
+      - ./catalog/catalog_data.json:/app/catalog_data.json
+    hostname: catalog-2
+    environment:
+      - CATALOG_REPLICAS=http://catalog-1:5001,http://catalog-2:5001
+      - PORT=5001
+      - HOSTNAME=catalog-2
+    networks:
+      - app-network
 
   order-1:
     build: ./order
     ports:
       - "5002:5002"
-    environment:
-      - CATALOG_SERVER=http://catalog:5001
     volumes:
       - ./order/order_log.txt:/app/order_log.txt
+    hostname: order-1
+    environment:
+      - CATALOG_REPLICAS=http://catalog-1:5001,http://catalog-2:5001
+      - FRONTEND_SERVER=http://frontend:5000
+    depends_on:
+      - catalog-1
+    networks:
+      - app-network
+  order-2:
+    build: ./order
+    ports:
+      - "5004:5002"
+    volumes:
+      - ./order/order_log.txt:/app/order_log.txt
+    hostname: order-2
+    environment:
+      - CATALOG_REPLICAS=http://catalog-1:5001,http://catalog-2:5001
+      - FRONTEND_SERVER=http://frontend:5000
+    depends_on:
+      - catalog-1
+    networks:
+      - app-network 
+
+networks:
+  app-network:
+    driver: bridge

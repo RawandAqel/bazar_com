@@ -6,7 +6,9 @@ import os
 app = Flask(__name__)
 
 # Catalog server URL (will be set based on environment)
-CATALOG_SERVER = os.getenv('CATALOG_SERVER', 'http://localhost:5001')
+CATALOG_SERVER = os.getenv('CATALOG_REPLICAS', ['http://localhost:5001']).split(',')
+last_catalog_server=0
+FRONTEND_SERVER = os.getenv('FRONTEND_SERVER')
 
 ORDER_LOG = 'order_log.txt'
 
@@ -17,7 +19,10 @@ def log_order(order_details):
 @app.route('/purchase/<int:item_number>', methods=['POST'])
 def purchase_book(item_number):
     # First check with catalog server if book is available
-    response = requests.get(f'{CATALOG_SERVER}/info/{item_number}')
+    global last_catalog_server
+    last_catalog_server = (last_catalog_server+1) % len(CATALOG_SERVER)
+
+    response = requests.get(f'{CATALOG_SERVER[last_catalog_server]}/info/{item_number}')
     
     if response.status_code != 200:
         return jsonify({"error": "Book not found"}), 404
@@ -28,7 +33,9 @@ def purchase_book(item_number):
         return jsonify({"error": "Book out of stock"}), 400
     
     # Update the catalog to decrement quantity
-    update_response = requests.post(f'{CATALOG_SERVER}/update', json={
+    requests.post(f'{FRONTEND_SERVER}/invalidate/{item_number}')
+    print(f'invalidated {item_number}')
+    update_response = requests.post(f'{CATALOG_SERVER[last_catalog_server]}/update', json={
         "id": item_number,
         "quantity": -1
     })

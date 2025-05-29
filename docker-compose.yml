@@ -9,7 +9,7 @@ services:
       - CATALOG_SERVER=http://catalog:5001
       - ORDER_SERVER=http://order:5002
     depends_on:
-      - catalog
+      - catalog-1
       - order
 
  catalog-1:

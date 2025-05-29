@@ -1,16 +1,20 @@
 from flask import Flask, jsonify, request
 import json
 import os
+import requests
 
 app = Flask(__name__)
 
 # Initialize catalog data
 CATALOG_FILE = 'catalog_data.json'
+replicas = os.getenv('CATALOG_REPLICAS').split(',')
+MY_SELF = 'http://' + os.getenv('HOSTNAME') + ':' + os.getenv('PORT')
+OTHERS = [r for r in replicas if r != MY_SELF]
 
 def load_catalog():
     if not os.path.exists(CATALOG_FILE):
         # Initial catalog data
-        catalog = {
+        catalog = {             
             "books": [
                 {
                     "id": 1,
@@ -72,9 +76,25 @@ def get_book_info(item_number):
         })
     return jsonify({"error": "Book not found"}), 404
 
-@app.route('/update', methods=['POST'])
-def update_book():
+def bodcast_to_others(endpoint, method, data):
+    print('bodcasting update')
+    for server in OTHERS:
+        if(method=='POST'):
+            requests.post(f'{server}/internal/{endpoint}',json=data)
+
+@app.route('/internal/update', methods=['POST'])
+def internal_update_book():
+    print('internal update')
     data = request.get_json()
+    return update_book(True,data)
+
+@app.route('/update', methods=['POST'])
+def public_update_book():
+    data = request.get_json()
+    return update_book(False,data)
+
+def update_book(internal, data):
+    print('updating')
     catalog = load_catalog()
     
     for book in catalog["books"]:
@@ -83,10 +103,14 @@ def update_book():
                 book["price"] = data["price"]
             if "quantity" in data:
                 book["quantity"] += data["quantity"]  # Can be positive or negative
+            if not internal:
+                bodcast_to_others('update','POST',data)
             save_catalog(catalog)
             return jsonify({"success": True})
     
     return jsonify({"error": "Book not found"}), 404
 
 if __name__ == '__main__':
+    print('MY_SELF = '+ MY_SELF)
+    print(OTHERS)
     app.run(host='0.0.0.0', port=5001)

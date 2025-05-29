@@ -28,6 +28,14 @@ def purchase(item_number):
     if response.status_code == 200:
         return jsonify(response.json())
     return jsonify({"error": "Purchase failed"}), 400
+@app.route('/purchase/<int:item_number>', methods=['POST'])
+def purchase(item_number):
+    global last_order_server
+    last_order_server = (last_order_server + 1) % len(ORDER_REPLICAS)
+    response = requests.post(f'{ORDER_REPLICAS[last_order_server]}/purchase/{item_number}')
+    if response.status_code == 200:
+        return jsonify(response.json())
+    return jsonify({"error": "Purchase failed"}), 400
 @app.route('/invalidate/<int:item_number>', methods=['POST'])
 def invalidate(item_number):
     invalidate_cache_for_id(item_number)
